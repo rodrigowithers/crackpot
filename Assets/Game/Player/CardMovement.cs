@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -14,62 +15,58 @@ namespace Game.Player
         
         public Card CurrentCard;
 
-        private Vector3 _cardVelocity;
+        private Vector2 _cardVelocity;
         
         private void Update()
         {
             Mouse mouse = Mouse.current;
+            
+            var mousePos = Camera.main.ScreenToWorldPoint(mouse.position.ReadValue());
+            mousePos.z = 0;
+            
+            DebugExtension.DebugCircle(mousePos, Vector3.forward, Color.red, 0.2f);
 
-            if (mouse.leftButton.wasPressedThisFrame)
+            if (mouse.leftButton.wasPressedThisFrame && CurrentCard == null)
             {
-                if (CurrentCard == null)
+                var hit = Physics2D.OverlapCircle(mousePos, 0.2f, _cardLayerMask);
+                if (hit != null)
                 {
-                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                    if (Physics.Raycast(ray, out RaycastHit hit, 10, _cardLayerMask))
-                    {
-                        PickCard(hit);
-                    }
+                    PickCard(hit);
                 }
             }
 
-            if (mouse.leftButton.isPressed)
+            if (mouse.leftButton.isPressed && CurrentCard != null)
             {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                if (Physics.Raycast(ray, out RaycastHit hit, 10, _tableLayerMask))
+                var hit = Physics2D.OverlapCircle(mousePos, 0.1f, _tableLayerMask);
+                if (hit != null)
                 {
-                    var pos = hit.point;
-                    pos.y = 1.2f;
-                    
-                    CurrentCard.transform.position = 
-                        Vector3.SmoothDamp(CurrentCard.transform.position, pos, ref _cardVelocity, _cardMovementTime);
+                    CurrentCard.transform.position = Vector2.SmoothDamp(
+                        CurrentCard.transform.position, mousePos, ref _cardVelocity, _cardMovementTime);
                 }
             }
 
             if (mouse.leftButton.wasReleasedThisFrame && CurrentCard != null)
             {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                if (Physics.Raycast(ray, out RaycastHit hit, 10, _tableLayerMask))
-                {
-                    var pos = hit.point;
-                    pos.y = 1.0f;
-                    
-                    DropCard(pos);
-                }
+                var hit = Physics2D.OverlapCircle(mousePos, 0.1f, _tableLayerMask);
+                if (hit != null)
+                    DropCard(mousePos);
             }
         }
 
         private void DropCard(Vector3 pos)
         {
             // For now, simply set card height back to 1
-            CurrentCard.transform.position = pos;
-            
+            CurrentCard.transform.DOMove(pos, 0.25f);
+            CurrentCard.Drop();
+
             // Release card from reference
             CurrentCard = null;
         }
 
-        private void PickCard(RaycastHit hit)
+        private void PickCard(Collider2D hit)
         {
-            CurrentCard = hit.collider.GetComponent<Card>();
+            CurrentCard = hit.GetComponent<Card>();
+            CurrentCard.Pick();
         }
     }
 }
