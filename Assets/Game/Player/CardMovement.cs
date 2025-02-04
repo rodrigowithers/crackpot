@@ -1,4 +1,5 @@
 using DG.Tweening;
+using Game.Cards;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,6 +10,7 @@ namespace Game.Player
         [Header("References")]
         [SerializeField] private LayerMask _cardLayerMask;
         [SerializeField] private LayerMask _tableLayerMask;
+        [SerializeField] private LayerMask _cardPileLayerMask;
         
         [Header("Configuration")]
         [SerializeField] private float _cardMovementTime = 0.2f;
@@ -28,10 +30,21 @@ namespace Game.Player
 
             if (mouse.leftButton.wasPressedThisFrame && CurrentCard == null)
             {
-                var hit = Physics2D.OverlapCircle(mousePos, 0.2f, _cardLayerMask);
-                if (hit != null)
+                // Getting cards from table
+                var cardHit = Physics2D.OverlapCircle(mousePos, 0.2f, _cardLayerMask);
+                if (cardHit != null)
                 {
-                    PickCard(hit);
+                    PickCard(cardHit);
+                }
+                
+                // Getting cards from Pile
+                var pileHit = Physics2D.OverlapCircle(mousePos, 0.2f, _cardPileLayerMask);
+                if (pileHit != null)
+                {
+                    var cardPile = pileHit.GetComponent<CardPile>();
+                    
+                    CurrentCard = cardPile.PickCard();
+                    CurrentCard.Pick();
                 }
             }
 
