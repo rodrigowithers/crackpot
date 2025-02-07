@@ -298,6 +298,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2cc99c85457f43429b716d22295f030d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _cardStackDirection: {x: 1, y: 0}
+  Cards: []
 --- !u!1 &627001742
 GameObject:
   m_ObjectHideFlags: 0
@@ -464,6 +466,9 @@ MonoBehaviour:
   _cardPileLayerMask:
     serializedVersion: 2
     m_Bits: 256
+  _cardSpaceLayerMask:
+    serializedVersion: 2
+    m_Bits: 512
   _cardMovementTime: 0.1
   CurrentCard: {fileID: 0}
 --- !u!1 &657057152
@@ -779,6 +784,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2cc99c85457f43429b716d22295f030d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _cardStackDirection: {x: 1, y: 0}
+  Cards: []
 --- !u!1 &1245414586
 GameObject:
   m_ObjectHideFlags: 0
@@ -871,6 +878,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2cc99c85457f43429b716d22295f030d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _cardStackDirection: {x: 1, y: 0}
+  Cards: []
 --- !u!1 &1391852555
 GameObject:
   m_ObjectHideFlags: 0
@@ -1050,6 +1059,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2cc99c85457f43429b716d22295f030d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _cardStackDirection: {x: 1, y: 0}
+  Cards: []
 --- !u!1 &1683125319
 GameObject:
   m_ObjectHideFlags: 0

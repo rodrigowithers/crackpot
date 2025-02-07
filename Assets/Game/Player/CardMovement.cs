@@ -1,5 +1,6 @@
 using DG.Tweening;
 using Game.Cards;
+using Game.Table;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -11,6 +12,7 @@ namespace Game.Player
         [SerializeField] private LayerMask _cardLayerMask;
         [SerializeField] private LayerMask _tableLayerMask;
         [SerializeField] private LayerMask _cardPileLayerMask;
+        [SerializeField] private LayerMask _cardSpaceLayerMask;
         
         [Header("Configuration")]
         [SerializeField] private float _cardMovementTime = 0.2f;
@@ -19,6 +21,9 @@ namespace Game.Player
 
         private Vector2 _cardVelocity;
         
+        private Vector2 _cardOriginalPosition;
+        private CardSpace _cardOriginalCardSpace;
+        
         private void Update()
         {
             Mouse mouse = Mouse.current;
@@ -26,15 +31,30 @@ namespace Game.Player
             var mousePos = Camera.main.ScreenToWorldPoint(mouse.position.ReadValue());
             mousePos.z = 0;
             
-            DebugExtension.DebugCircle(mousePos, Vector3.forward, Color.red, 0.2f);
+            DebugExtension.DebugCircle(mousePos, Vector3.forward, Color.red, 0.1f);
 
             if (mouse.leftButton.wasPressedThisFrame && CurrentCard == null)
             {
                 // Getting cards from table
-                var cardHit = Physics2D.OverlapCircle(mousePos, 0.2f, _cardLayerMask);
+                var cardHit = Physics2D.OverlapCircle(mousePos, 0.1f, _cardLayerMask);
                 if (cardHit != null)
                 {
-                    PickCard(cardHit);
+                    // Check if card is not in a CardSpace, if it is, only pick the last card from that space
+                    var card = cardHit.GetComponent<Card>();
+                    if (card.CurrentCardSpace != null)
+                    {
+                        if(card.CurrentCardSpace.TopCard == card)
+                            PickCard(card);
+                        else
+                        {
+                            card.transform.DOKill(true);
+                            card.transform.DOShakeRotation(0.5f, 10);
+                        }
+                    }
+                    else
+                    {
+                        PickCard(card);
+                    }
                 }
                 
                 // Getting cards from Pile
@@ -42,43 +62,113 @@ namespace Game.Player
                 if (pileHit != null)
                 {
                     var cardPile = pileHit.GetComponent<CardPile>();
-                    
-                    CurrentCard = cardPile.PickCard();
-                    CurrentCard.Pick();
+                    PickCard(cardPile.PickCard());
                 }
             }
-
-            if (mouse.leftButton.isPressed && CurrentCard != null)
+            
+            // Handle Card Movement
+            if (CurrentCard != null)
             {
-                var hit = Physics2D.OverlapCircle(mousePos, 0.1f, _tableLayerMask);
-                if (hit != null)
+                if (mouse.leftButton.isPressed)
                 {
-                    CurrentCard.transform.position = Vector2.SmoothDamp(
-                        CurrentCard.transform.position, mousePos, ref _cardVelocity, _cardMovementTime);
+                    var hit = Physics2D.OverlapCircle(mousePos, 0.1f, _tableLayerMask);
+                    if (hit != null)
+                    {
+                        CurrentCard.transform.position = Vector2.SmoothDamp(
+                            CurrentCard.transform.position, mousePos, ref _cardVelocity, _cardMovementTime);
+                    }
                 }
-            }
 
-            if (mouse.leftButton.wasReleasedThisFrame && CurrentCard != null)
-            {
-                var hit = Physics2D.OverlapCircle(mousePos, 0.1f, _tableLayerMask);
-                if (hit != null)
-                    DropCard(mousePos);
+                if (mouse.leftButton.wasReleasedThisFrame)
+                {
+                    var hit = Physics2D.OverlapCircle(mousePos, 0.1f, _tableLayerMask);
+                    if (hit != null)
+                        DropCard(mousePos);
+                }
             }
         }
 
         private void DropCard(Vector3 pos)
         {
-            // For now, simply set card height back to 1
-            CurrentCard.transform.DOMove(pos, 0.25f);
-            CurrentCard.Drop();
+            // Check if player hovered on top of CardSpace
+            var cardSpaceHit = Physics2D.OverlapCircle(pos, 0.2f, _cardSpaceLayerMask);
+            if (cardSpaceHit != null)
+            {
+                var cardSpace = cardSpaceHit.GetComponent<CardSpace>();
+                
+                // Check first if cardSpace is empty
+                if (cardSpace.TopCard == null)
+                {
+                    // No card at Card Space, put this card in it
+                    DropAtCardSpace(cardSpace);
+                }
+                else
+                {
+                    // If not, check if colors are not the same
+                    if (cardSpace.TopCard.Color != CurrentCard.Color)
+                    {
+                        // Check if card number is correct
+                        bool canDrop = cardSpace.TopCard.Number == CurrentCard.Number + 1;
 
-            // Release card from reference
+                        if (canDrop)
+                        {
+                            DropAtCardSpace(cardSpace);
+                        }
+                        else
+                        {
+                            ReturnCardToOrigin();
+                        }
+                    }
+                    else
+                    {
+                        ReturnCardToOrigin();
+                    }
+                }
+            }
+            else
+            {
+                ReturnCardToOrigin();
+            }
+        }
+
+        private void ReturnCardToOrigin()
+        {
+            if (_cardOriginalCardSpace != null)
+            {
+                DropAtCardSpace(_cardOriginalCardSpace);
+            }
+            else
+            {
+                // Return card to Original Position
+                CurrentCard.transform.DOMove(_cardOriginalPosition, 0.25f);
+                CurrentCard.Drop();
+
+                // Release card from reference
+                CurrentCard = null;
+            }
+        }
+
+        private void DropAtCardSpace(CardSpace cardSpace)
+        {
+            CurrentCard.transform.DOMove(cardSpace.TopPosition, 0.25f);
+
+            // Drop and update sorting order
+            CurrentCard.Drop(cardSpace.Cards.Count + 1);
+            cardSpace.Put(CurrentCard);
+            
             CurrentCard = null;
         }
 
-        private void PickCard(Collider2D hit)
+        private void PickCard(Card card)
         {
-            CurrentCard = hit.GetComponent<Card>();
+            CurrentCard = card;
+            
+            _cardOriginalPosition = CurrentCard.transform.position;
+            
+            // Check if this card came from a Card Space, if so, keep it stored to return it 
+            if(card.CurrentCardSpace != null)
+                _cardOriginalCardSpace = card.CurrentCardSpace;
+            
             CurrentCard.Pick();
         }
     }

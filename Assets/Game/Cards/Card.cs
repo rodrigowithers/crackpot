@@ -1,5 +1,6 @@
 using System;
 using DG.Tweening;
+using Game.Table;
 using UnityEngine;
 
 namespace Game.Cards
@@ -15,21 +16,38 @@ namespace Game.Cards
         [Header("Config")]
         [SerializeField] private SpriteRenderer _spriteRenderer;
         [SerializeField] private CardColor _cardColor;
-    
+        [SerializeField] private int _number;
+        
+        public CardSpace CurrentCardSpace { get; set; }
+        
+        public CardColor Color => _cardColor;
+        public int Number => _number;
+        public int OrderInLayer
+        { 
+            set => _spriteRenderer.sortingOrder = value;
+        }
+
         public void Pick()
         {
+            if (CurrentCardSpace != null)
+            {
+                // If card is in a card space, clear it from there
+                CurrentCardSpace.Take(this);
+            }
+            
+            CurrentCardSpace = null;
             transform.DOKill(true);
 
             transform.DOScale(Vector3.one * 1.5f, 0.2f).SetEase(Ease.OutBack);
             _spriteRenderer.sortingOrder = 999;
         }
 
-        public void Drop()
+        public void Drop(int newSortingOrder = 0)
         {
             transform.DOKill(true);
         
             transform.DOScale(Vector3.one, 0.1f).SetEase(Ease.Linear);
-            _spriteRenderer.sortingOrder = 0;
+            _spriteRenderer.sortingOrder = newSortingOrder;
         }
 
         private void OnValidate()
