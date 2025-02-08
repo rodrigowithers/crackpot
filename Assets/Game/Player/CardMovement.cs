@@ -95,39 +95,76 @@ namespace Game.Player
             if (cardSpaceHit != null)
             {
                 var cardSpace = cardSpaceHit.GetComponent<CardSpace>();
-                
-                // Check first if cardSpace is empty
-                if (cardSpace.TopCard == null)
+
+                if (cardSpace is GoalSpace space)
                 {
-                    // No card at Card Space, put this card in it
-                    DropAtCardSpace(cardSpace);
+                    TryPlaceOnGoalSpace(space);
                 }
                 else
                 {
-                    // If not, check if colors are not the same
-                    if (cardSpace.TopCard.Color != CurrentCard.Color)
-                    {
-                        // Check if card number is correct
-                        bool canDrop = cardSpace.TopCard.Number == CurrentCard.Number + 1;
+                    TryPlaceOnCardSpace(cardSpace);
+                }
+            }
+            else
+            {
+                ReturnCardToOrigin();
+            }
+        }
 
-                        if (canDrop)
-                        {
-                            DropAtCardSpace(cardSpace);
-                        }
-                        else
-                        {
-                            ReturnCardToOrigin();
-                        }
+        private void TryPlaceOnGoalSpace(GoalSpace goalSpace)
+        {
+            // Check first if cardSpace is empty
+            if (goalSpace.TopCard == null)
+            {
+                // No card at Card Space, if this is an Ace (1), drop
+                if(CurrentCard.Number == 1)
+                    DropAtCardSpace(goalSpace);
+                else
+                    ReturnCardToOrigin();
+            }
+            else
+            {
+                // If not, check if top card is same type and next number
+                if (goalSpace.TopCard.Suit == CurrentCard.Suit && CurrentCard.Number == goalSpace.TopCard.Number + 1)
+                {
+                    DropAtCardSpace(goalSpace);
+                }
+                else
+                {
+                    ReturnCardToOrigin();
+                }
+            }
+        }
+
+        private void TryPlaceOnCardSpace(CardSpace cardSpace)
+        {
+            // Check first if cardSpace is empty
+            if (cardSpace.TopCard == null)
+            {
+                // No card at Card Space, put this card in it
+                DropAtCardSpace(cardSpace);
+            }
+            else
+            {
+                // If not, check if colors are not the same
+                if (cardSpace.TopCard.Color != CurrentCard.Color)
+                {
+                    // Check if card number is correct
+                    bool canDrop = cardSpace.TopCard.Number == CurrentCard.Number + 1;
+
+                    if (canDrop)
+                    {
+                        DropAtCardSpace(cardSpace);
                     }
                     else
                     {
                         ReturnCardToOrigin();
                     }
                 }
-            }
-            else
-            {
-                ReturnCardToOrigin();
+                else
+                {
+                    ReturnCardToOrigin();
+                }
             }
         }
 

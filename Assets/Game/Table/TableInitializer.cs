@@ -10,6 +10,7 @@ namespace Game.Table
     {
         [SerializeField] private List<CardSpace> _tableCardSpaces;
         [SerializeField] private List<GoalSpace> _tableGoalSpaces;
+        [SerializeField] private List<CardPile> _mainCardPiles;
 
         [SerializeField] private DeckScriptableObject _deck;
 
@@ -27,6 +28,13 @@ namespace Game.Table
             {
                 var card = Instantiate(firstCards[i], _tableCardSpaces[i].transform.position, Quaternion.identity);
                 _tableCardSpaces[i].Put(card);
+            }
+            
+            int remainingCards = _cards.Count;
+            
+            for (var i = 0; i < _mainCardPiles.Count; i++)
+            {
+                _mainCardPiles[i].Cards = GetCards(ref _cards, remainingCards / _mainCardPiles.Count);
             }
         }
 

@@ -12,15 +12,26 @@ namespace Game.Cards
             Red,
             Blue
         }
+
+        public enum CardSuit
+        {
+            Clubs,
+            Diamonds,
+            Hearts,
+            Spades
+        }
         
         [Header("Config")]
         [SerializeField] private SpriteRenderer _spriteRenderer;
         [SerializeField] private CardColor _cardColor;
+        [SerializeField] private CardSuit _cardSuit;
         [SerializeField] private int _number;
         
         public CardSpace CurrentCardSpace { get; set; }
         
         public CardColor Color => _cardColor;
+        public CardSuit Suit => _cardSuit;
+        
         public int Number => _number;
         public int OrderInLayer
         { 

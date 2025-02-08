@@ -48,7 +48,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _spriteRenderer: {fileID: 5450454669414261614}
   _cardColor: 1
-  _number: 4
+  _cardSuit: 2
+  _number: 5
 --- !u!61 &6219937568371935698
 BoxCollider2D:
   m_ObjectHideFlags: 0
