@@ -7,17 +7,21 @@ namespace Game.Cards
     {
         [SerializeField] protected Vector3 _pickedCardOffset;
         
-        public List<Card> Cards = new List<Card>();
+        public List<Card> StockCards = new List<Card>();
+        public List<Card> PickedCards = new List<Card>();
 
         public Vector3 CardPosition => transform.position + _pickedCardOffset;
         
         public virtual Card PickCard()
         {
-            var cardToInstantiate = Cards[0];
-            Cards.RemoveAt(0);
-            
-            var card = Instantiate(cardToInstantiate, transform.position, Quaternion.identity);
-            return card;
+            var selectedCard = StockCards[0];
+            StockCards.RemoveAt(0);
+
+            selectedCard.transform.position = transform.position;
+            selectedCard.gameObject.SetActive(true);
+
+            PickedCards.Add(selectedCard);
+            return selectedCard;
         }
     }
 }

@@ -1,7 +1,7 @@
-using DG.Tweening;
 using Game.Cards;
 using Game.Table;
 using UnityEngine;
+using DG.Tweening;
 using UnityEngine.InputSystem;
 
 namespace Game.Player
@@ -45,17 +45,19 @@ namespace Game.Player
                     
                     if (card.CurrentCardSpace != null)
                     {
-                        if(card.CurrentCardSpace.TopCard == card)
-                            PickCard(card);
-                        else
+                        if (card.CurrentCardSpace.TopCard == card)
                         {
-                            card.transform.DOKill(true);
-                            card.transform.DOShakeRotation(0.5f, 10);
+                            PickCard(card);
+                            return;
                         }
+
+                        card.transform.DOKill(true);
+                        card.transform.DOShakeRotation(0.5f, 10);
                     }
                     else
                     {
                         PickCard(card);
+                        return;
                     }
                 }
                 
@@ -67,6 +69,7 @@ namespace Game.Player
                     PickCard(cardPile.PickCard());
                     
                     CurrentCard.OriginalPosition = cardPile.CardPosition;
+                    return;
                 }
             }
             
@@ -85,6 +88,7 @@ namespace Game.Player
 
                 if (mouse.leftButton.wasReleasedThisFrame)
                 {
+                    // Try to drop Card on table
                     var hit = Physics2D.OverlapCircle(mousePos, 0.1f, _tableLayerMask);
                     if (hit != null)
                         DropCard(mousePos);
@@ -94,6 +98,36 @@ namespace Game.Player
 
         private void DropCard(Vector3 pos)
         {
+            // Check if player can drop card on top of another players card
+            Collider2D[] hits = new Collider2D[3];
+            ContactFilter2D filter = new ContactFilter2D
+            {
+                useLayerMask = true,
+                layerMask = _cardLayerMask,
+            };
+
+            var hitCount = Physics2D.OverlapCircle(pos, 0.2f, filter, hits);
+            for (int i = 0; i < hitCount; i++)
+            {
+                var card = hits[i].GetComponent<Card>();
+                
+                // Ignore current card
+                if(card == CurrentCard)
+                    continue;
+
+                // Card is the same suit, one higher or one lower
+                if (card.CurrentCardSpace == null &&
+                    card.Suit == CurrentCard.Suit &&
+                    (card.Number == CurrentCard.Number + 1 || card.Number == CurrentCard.Number - 1))
+                {
+                    CurrentCard.transform.DOMove(card.transform.position, 0.25f);
+                    CurrentCard.Drop(card.OrderInLayer + 1);
+                    
+                    CurrentCard = null;
+                    return;
+                }
+            }
+            
             // Check if player hovered on top of CardSpace
             var cardSpaceHit = Physics2D.OverlapCircle(pos, 0.2f, _cardSpaceLayerMask);
             if (cardSpaceHit != null)

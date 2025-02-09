@@ -11,6 +11,7 @@ namespace Game.Table
         [SerializeField] private List<CardSpace> _tableCardSpaces;
         [SerializeField] private List<GoalSpace> _tableGoalSpaces;
         [SerializeField] private List<CardPile> _mainCardPiles;
+        [SerializeField] private List<CardPile> _crockpotCardPiles;
 
         [SerializeField] private DeckScriptableObject _deck;
 
@@ -26,15 +27,26 @@ namespace Game.Table
             var firstCards = GetCards(ref _cards, _tableCardSpaces.Count);
             for (int i = 0; i < firstCards.Count; i++)
             {
-                var card = Instantiate(firstCards[i], _tableCardSpaces[i].transform.position, Quaternion.identity);
+                var card = firstCards[i];
+                
+                card.transform.position = _tableCardSpaces[i].transform.position;
+                card.gameObject.SetActive(true);
+                
                 _tableCardSpaces[i].Put(card);
             }
             
-            int remainingCards = _cards.Count;
+            for (var i = 0; i < _crockpotCardPiles.Count; i++)
+            {
+                _crockpotCardPiles[i].StockCards = GetCards(ref _cards, 14);
+                
+                var initialCard = _crockpotCardPiles[i].PickCard();
+                initialCard.OriginalPosition = _crockpotCardPiles[i].transform.position;
+            }
             
+            int remainingCards = _cards.Count;
             for (var i = 0; i < _mainCardPiles.Count; i++)
             {
-                _mainCardPiles[i].Cards = GetCards(ref _cards, remainingCards / _mainCardPiles.Count);
+                _mainCardPiles[i].StockCards = GetCards(ref _cards, remainingCards / _mainCardPiles.Count);
             }
         }
 
@@ -57,7 +69,16 @@ namespace Game.Table
             }
 
             // Take first 'count' cards from the shuffled list
-            List<Card> selectedCards = cards.Take(count).ToList();
+            // Instantiate them and pass them disabled
+            List<Card> selectedCards = new List<Card>();
+            var cardsToInstantiate = cards.Take(count).ToList();
+            for (var i = 0; i < cardsToInstantiate.Count; i++)
+            {
+                var instance = Instantiate(cardsToInstantiate[i], transform);
+                instance.gameObject.SetActive(false);
+
+                selectedCards.Add(instance);
+            }
 
             // Remove the selected cards from the available list
             cards.RemoveRange(0, count);

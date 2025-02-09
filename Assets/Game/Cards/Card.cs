@@ -36,10 +36,7 @@ namespace Game.Cards
         public CardSpace OriginalCardSpace { get; set; }
         
         public int Number => _number;
-        public int OrderInLayer
-        { 
-            set => _spriteRenderer.sortingOrder = value;
-        }
+        public int OrderInLayer => _spriteRenderer.sortingOrder;
 
         /// <summary>
         /// Cards On Goal cannot be moved
