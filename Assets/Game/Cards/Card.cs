@@ -32,11 +32,19 @@ namespace Game.Cards
         public CardColor Color => _cardColor;
         public CardSuit Suit => _cardSuit;
         
+        public Vector3 OriginalPosition { get; set; }
+        public CardSpace OriginalCardSpace { get; set; }
+        
         public int Number => _number;
         public int OrderInLayer
         { 
             set => _spriteRenderer.sortingOrder = value;
         }
+
+        /// <summary>
+        /// Cards On Goal cannot be moved
+        /// </summary>
+        public bool OnGoal { get; set; }
 
         public void Pick()
         {

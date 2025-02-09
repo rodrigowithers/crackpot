@@ -3567,6 +3567,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Card Pile Main
       objectReference: {fileID: 0}
+    - target: {fileID: 8772169407963283024, guid: c4e5d129ef98a1048826b2a277501882, type: 3}
+      propertyPath: _pickedCardOffset.x
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

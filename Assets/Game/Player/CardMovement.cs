@@ -21,9 +21,6 @@ namespace Game.Player
 
         private Vector2 _cardVelocity;
         
-        private Vector2 _cardOriginalPosition;
-        private CardSpace _cardOriginalCardSpace;
-        
         private void Update()
         {
             Mouse mouse = Mouse.current;
@@ -41,6 +38,11 @@ namespace Game.Player
                 {
                     // Check if card is not in a CardSpace, if it is, only pick the last card from that space
                     var card = cardHit.GetComponent<Card>();
+
+                    // Dont pick up cards on goal
+                    if (card.OnGoal)
+                        return;
+                    
                     if (card.CurrentCardSpace != null)
                     {
                         if(card.CurrentCardSpace.TopCard == card)
@@ -63,6 +65,8 @@ namespace Game.Player
                 {
                     var cardPile = pileHit.GetComponent<CardPile>();
                     PickCard(cardPile.PickCard());
+                    
+                    CurrentCard.OriginalPosition = cardPile.CardPosition;
                 }
             }
             
@@ -117,16 +121,23 @@ namespace Game.Player
             if (goalSpace.TopCard == null)
             {
                 // No card at Card Space, if this is an Ace (1), drop
-                if(CurrentCard.Number == 1)
+                if (CurrentCard.Number == 1)
+                {
+                    // Set card as OnGoal
+                    CurrentCard.OnGoal = true;
                     DropAtCardSpace(goalSpace);
+                }
                 else
+                {
                     ReturnCardToOrigin();
+                }
             }
             else
             {
                 // If not, check if top card is same type and next number
                 if (goalSpace.TopCard.Suit == CurrentCard.Suit && CurrentCard.Number == goalSpace.TopCard.Number + 1)
                 {
+                    CurrentCard.OnGoal = true;
                     DropAtCardSpace(goalSpace);
                 }
                 else
@@ -170,14 +181,14 @@ namespace Game.Player
 
         private void ReturnCardToOrigin()
         {
-            if (_cardOriginalCardSpace != null)
+            if (CurrentCard.OriginalCardSpace != null)
             {
-                DropAtCardSpace(_cardOriginalCardSpace);
+                DropAtCardSpace(CurrentCard.OriginalCardSpace);
             }
             else
             {
                 // Return card to Original Position
-                CurrentCard.transform.DOMove(_cardOriginalPosition, 0.25f);
+                CurrentCard.transform.DOMove(CurrentCard.OriginalPosition, 0.25f);
                 CurrentCard.Drop();
 
                 // Release card from reference
@@ -199,12 +210,11 @@ namespace Game.Player
         private void PickCard(Card card)
         {
             CurrentCard = card;
-            
-            _cardOriginalPosition = CurrentCard.transform.position;
+            CurrentCard.OriginalPosition = CurrentCard.transform.position;
             
             // Check if this card came from a Card Space, if so, keep it stored to return it 
             if(card.CurrentCardSpace != null)
-                _cardOriginalCardSpace = card.CurrentCardSpace;
+                CurrentCard.OriginalCardSpace = card.CurrentCardSpace;
             
             CurrentCard.Pick();
         }
