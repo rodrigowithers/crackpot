@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace Game.Cards
 {
+    [SelectionBase]
     public class Card : MonoBehaviour
     {
         public enum CardColor
@@ -34,6 +35,7 @@ namespace Game.Cards
         
         public Vector3 OriginalPosition { get; set; }
         public CardSpace OriginalCardSpace { get; set; }
+        public CardPile CurrentPile { get; set; }
         
         public int Number => _number;
         public int OrderInLayer => _spriteRenderer.sortingOrder;
@@ -42,6 +44,9 @@ namespace Game.Cards
         /// Cards On Goal cannot be moved
         /// </summary>
         public bool OnGoal { get; set; }
+
+        public int LastOrderInLayer { get; set; }
+
 
         public void Pick()
         {

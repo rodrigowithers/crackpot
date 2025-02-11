@@ -1,12 +1,16 @@
-﻿namespace Game.Cards
+﻿using UnityEngine;
+
+namespace Game.Cards
 {
+    [SelectionBase]
     public class MainCardPile : CardPile
     {
         public override Card PickCard()
         {
             var card = base.PickCard();
             card.OriginalPosition = transform.position + _pickedCardOffset;
-
+            card.CurrentPile = this;
+            
             // Check if we picked the last card from Stock
             if (StockCards.Count <= 0)
             {

@@ -3580,6 +3580,7 @@ MonoBehaviour:
   - {fileID: 8186396454815486435}
   - {fileID: 1913319824}
   _deck: {fileID: 11400000, guid: 36c074785400f18488ebf56a4c6012ab, type: 2}
+  _seed: 1858785986
 --- !u!1001 &1913319823
 PrefabInstance:
   m_ObjectHideFlags: 0

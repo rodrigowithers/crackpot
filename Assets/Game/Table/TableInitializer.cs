@@ -15,6 +15,9 @@ namespace Game.Table
 
         [SerializeField] private DeckScriptableObject _deck;
 
+        [Header("Debug")]
+        [SerializeField] private int _seed;
+        
         private List<Card> _cards;
         
         // Initializes the table by shuffling all cards
@@ -52,7 +55,11 @@ namespace Game.Table
 
         private void ShuffleCards(ref List<Card> cards)
         {
-            // Fisher-Yates shuffle algorithm
+            // Fisher-Yates shuffle algorithm, using seed
+            if (_seed == 0)
+                _seed = Random.Range(0, int.MaxValue);
+            
+            Random.InitState(_seed);
             for (int i = 0; i < cards.Count; i++)
             {
                 int randomIndex = Random.Range(i, cards.Count);

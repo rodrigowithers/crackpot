@@ -66,10 +66,14 @@ namespace Game.Player
                 if (pileHit != null)
                 {
                     var cardPile = pileHit.GetComponent<CardPile>();
-                    PickCard(cardPile.PickCard());
-                    
-                    CurrentCard.OriginalPosition = cardPile.CardPosition;
-                    return;
+                    var card = cardPile.PickCard();
+                    if (card != null)
+                    {
+                        PickCard(card);
+
+                        CurrentCard.OriginalPosition = cardPile.CardPosition;
+                        return;
+                    }                    
                 }
             }
             
@@ -115,17 +119,50 @@ namespace Game.Player
                 if(card == CurrentCard)
                     continue;
 
-                // Card is the same suit, one higher or one lower
-                if (card.CurrentCardSpace == null &&
-                    card.Suit == CurrentCard.Suit &&
-                    (card.Number == CurrentCard.Number + 1 || card.Number == CurrentCard.Number - 1))
+                // Check if card is part of a Pile
+                var cardPile = card.CurrentPile;
+                if (cardPile != null)
                 {
-                    CurrentCard.transform.DOMove(card.transform.position, 0.25f);
-                    CurrentCard.Drop(card.OrderInLayer + 1);
+                    // Now, get top card of this pile, to check against it
+                    var top = cardPile.TopCard;
                     
-                    CurrentCard = null;
-                    return;
+                    if (top != null &&
+                        top.Suit == CurrentCard.Suit &&
+                        (top.Number == CurrentCard.Number + 1 || top.Number == CurrentCard.Number - 1))
+                    {
+                        // Drop card on top of same suit if card is at crockpot or main pile
+                        cardPile.PickedCards.Add(CurrentCard);
+                        CurrentCard.CurrentPile = cardPile;
+                    
+                        CurrentCard.transform.DOMove(top.transform.position, 0.25f);
+                        CurrentCard.Drop(cardPile.PickedCards.Count + 1);
+                    
+                        // Clear Original Space of that card
+                        CurrentCard.OriginalCardSpace = null;
+                    
+                        CurrentCard = null;
+                        return;
+                    }
                 }
+                
+                // // Card is the same suit, one higher or one lower
+                // if (card.CurrentCardSpace == null &&
+                //     card.Suit == CurrentCard.Suit &&
+                //     (card.Number == CurrentCard.Number + 1 || card.Number == CurrentCard.Number - 1))
+                // {
+                //     // Drop card on top of same suit if card is at crockpot or main pile
+                //     card.CurrentPile.PickedCards.Add(CurrentCard);
+                //     CurrentCard.CurrentPile = card.CurrentPile;
+                //     
+                //     CurrentCard.transform.DOMove(card.transform.position, 0.25f);
+                //     CurrentCard.Drop(card.OrderInLayer + 1);
+                //     
+                //     // Clear Original Space of that card
+                //     CurrentCard.OriginalCardSpace = null;
+                //     
+                //     CurrentCard = null;
+                //     return;
+                // }
             }
             
             // Check if player hovered on top of CardSpace
@@ -157,7 +194,7 @@ namespace Game.Player
                 // No card at Card Space, if this is an Ace (1), drop
                 if (CurrentCard.Number == 1)
                 {
-                    // Set card as OnGoal
+                    // Set card as OnGoal and remove any other references
                     CurrentCard.OnGoal = true;
                     DropAtCardSpace(goalSpace);
                 }
@@ -223,7 +260,15 @@ namespace Game.Player
             {
                 // Return card to Original Position
                 CurrentCard.transform.DOMove(CurrentCard.OriginalPosition, 0.25f);
-                CurrentCard.Drop();
+                
+                // If original position is a Pile, reorder it to that Pile
+                if(CurrentCard.CurrentPile != null)
+                    CurrentCard.Drop(CurrentCard.CurrentPile.PickedCards.Count);
+                else
+                {
+                    // Drop it to Last Layer Index
+                    CurrentCard.Drop(CurrentCard.LastOrderInLayer);
+                }
 
                 // Release card from reference
                 CurrentCard = null;
@@ -236,7 +281,14 @@ namespace Game.Player
 
             // Drop and update sorting order
             CurrentCard.Drop(cardSpace.Cards.Count + 1);
+            
             cardSpace.Put(CurrentCard);
+            
+            // Clear Original Space of that card
+            CurrentCard.OriginalCardSpace = null;
+            
+            if(CurrentCard.CurrentPile != null)
+                CurrentCard.CurrentPile.PickedCards.Remove(CurrentCard);
             
             CurrentCard = null;
         }
@@ -249,7 +301,8 @@ namespace Game.Player
             // Check if this card came from a Card Space, if so, keep it stored to return it 
             if(card.CurrentCardSpace != null)
                 CurrentCard.OriginalCardSpace = card.CurrentCardSpace;
-            
+
+            CurrentCard.LastOrderInLayer = CurrentCard.OrderInLayer;
             CurrentCard.Pick();
         }
     }

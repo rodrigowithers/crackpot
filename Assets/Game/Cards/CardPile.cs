@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Game.Cards
 {
@@ -11,7 +12,18 @@ namespace Game.Cards
         public List<Card> PickedCards = new List<Card>();
 
         public Vector3 CardPosition => transform.position + _pickedCardOffset;
-        
+
+        public Card TopCard
+        {
+            get
+            {
+                if (PickedCards.Count <= 0)
+                    return null;
+
+                return PickedCards[^1];
+            }
+        }
+
         public virtual Card PickCard()
         {
             var selectedCard = StockCards[0];
